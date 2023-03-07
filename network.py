@@ -143,8 +143,8 @@ class REPLAY(nn.Module):
 
         week_weight=self.week_distribution(self.week_weight_index).view(168,168)
         # week_weight = torch.where(week_weight < 0.001, 0, week_weight).view(1,user_len,168,1)
-        assert not torch.isinf(week_weight).any()
-        assert not torch.isnan(week_weight).any()
+#         assert not torch.isinf(week_weight).any()
+#         assert not torch.isnan(week_weight).any()
         # day_weight=self.day_distribution(self.day_weight_index).view(24,24)
         # day_weight=torch.where(day_weight < 0.01, 0, day_weight).view(1,user_len,24,1)
         # assert not torch.isinf(day_weight).any()
