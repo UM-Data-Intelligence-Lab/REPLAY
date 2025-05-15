@@ -76,9 +76,7 @@ class REPLAY(nn.Module):
         self.week_matrix=week #168 *168 
 
         self.week_weight_index=week_weight_index
-
-
-        
+    
         self.encoder = nn.Embedding(input_size, hidden_size) # location embedding
         self.user_encoder = nn.Embedding(user_count, hidden_size) # user embedding
         self.week_encoder=nn.Embedding(24*7,hidden_size//2)
