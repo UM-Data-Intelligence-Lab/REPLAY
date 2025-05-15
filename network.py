@@ -91,31 +91,17 @@ class REPLAY(nn.Module):
         seq_len, user_len = x.size()
         
         week_weight=self.week_distribution(self.week_weight_index).view(168,168)
-        # week_weight = torch.where(week_weight < 0.001, 0, week_weight).view(1,user_len,168,1)
-        # day_weight=self.day_distribution(self.day_weight_index).view(24,24)
-        # day_weight=torch.where(day_weight < 0.01, 0, day_weight).view(1,user_len,24,1)
-        # assert not torch.isinf(day_weight).any()
-        # assert not torch.isnan(day_weight).any()
-        # t_day1=t_slot%24
-        # t_day2=y_t_slot%24
-
         new_week_weight1=week_weight.index_select(0,t_slot.view(-1)).view(seq_len,user_len,168,1)
         new_week_weight2=week_weight.index_select(0,y_t_slot.view(-1)).view(seq_len,user_len,168,1)
-
 
         w_t1=self.week_matrix.index_select(0,t_slot.view(-1)).view(seq_len,user_len,-1)
         w_t1=self.week_encoder(w_t1).permute(0,1,3,2)#seq*batch_size*5*168
 
         w_t1=torch.matmul(w_t1,new_week_weight1).squeeze()
-
         t_emb1 = w_t1
-
         w_t2=self.week_matrix.index_select(0,y_t_slot.view(-1)).view(seq_len,user_len,-1)
-
         w_t2=self.week_encoder(w_t2).permute(0,1,3,2)#seq*batch_size*5*168
-
         w_t2=torch.matmul(w_t2,new_week_weight2).squeeze()
-
         t_emb2 = w_t2
 
 
