@@ -60,19 +60,8 @@ class User_Week_Distribution(nn.Module):
         learned_weight=1/torch.sqrt(2*pi*(self.sigma**2))*torch.exp(-(x**2)/(2*(self.sigma**2)))
         sum=torch.sum(learned_weight,dim=1,keepdim=True)
         return learned_weight/sum
-        # return 1/torch.sqrt(2*pi*(self.sigma**2))*torch.exp((-x**2)/(2*(self.sigma**2)))
 
     
-# class User_Day_Distribution(nn.Module):
-#     def __init__(self,stamp_num):
-#         super().__init__()
-#         self.stamp_num=stamp_num
-#         self.sigma=nn.Parameter(torch.ones(self.stamp_num).view(self.stamp_num,1))
-
-    # def forward(self,x):
-    #     # sigma=self.user_day_sigma.index_select(0,active_user.view(-1)).view(user_len,-1)
-    #     return 1/torch.sqrt(2*pi*(self.sigma**2))*torch.exp((-x**2)/(2*(self.sigma**2)))
-
     
 class REPLAY(nn.Module):
  
@@ -105,42 +94,7 @@ class REPLAY(nn.Module):
 
     def forward(self, x, t, t_slot, s, y_t, y_t_slot, y_s, h, active_user):        
         seq_len, user_len = x.size()
-        # #------------------all ----------------------------
-
-
-        # # week_weight = torch.where(week_weight < 0.001, 0, week_weight).view(1,user_len,168,1)
-        # # assert not torch.isinf(week_weight).any()
-        # # assert not torch.isnan(week_weight).any()
-
-        # # day_weight=torch.where(day_weight < 0.01, 0, day_weight).view(1,user_len,24,1)
-        # # assert not torch.isinf(day_weight).any()
-        # # assert not torch.isnan(day_weight).any()
-        # t_day1=t_slot%24
-        # t_day2=y_t_slot%24
-
-        # new_week_weight1=week_weight.index_select(0,t_slot.view(-1)).view(seq_len,user_len,168,1)
-
-
-        # new_day_weight2=day_weight.index_select(0,t_day2.view(-1)).view(seq_len,user_len,24,1)
-
-        # w_t1=self.week_matrix.index_select(0,t_slot.view(-1)).view(seq_len,user_len,-1)
-        # d_t1=self.day_matrix.index_select(0,t_day1.view(-1)).view(seq_len,user_len,-1)
-
-        # d_t1=self.day_encoder(d_t1).permute(0,1,3,2)#seq*batch_size*5*24
-        # w_t1=torch.matmul(w_t1,new_week_weight1).squeeze()
-        # d_t1=torch.matmul(d_t1,new_day_weight1).squeeze()
-        # t_emb1 = torch.cat((w_t1,d_t1),dim=-1)
-        # # # print(t_emb1.type())
-        # w_t2=self.week_matrix.index_select(0,y_t_slot.view(-1)).view(seq_len,user_len,-1)
-        # d_t2=self.day_matrix.index_select(0,t_day2.view(-1)).view(seq_len,user_len,-1)
-        # w_t2=self.week_encoder(w_t2).permute(0,1,3,2)#seq*batch_size*5*168
-        # d_t2=self.day_encoder(d_t2).permute(0,1,3,2)#seq*batch_size*5*24
-        # w_t2=torch.matmul(w_t2,new_week_weight2).squeeze()
-        # d_t2=torch.matmul(d_t2,new_day_weight2).squeeze()
-        # t_emb2 = torch.cat((w_t2,d_t2),dim=-1)
-
-        #------------------week only ----------------------------
-
+        
         week_weight=self.week_distribution(self.week_weight_index).view(168,168)
         # week_weight = torch.where(week_weight < 0.001, 0, week_weight).view(1,user_len,168,1)
         # day_weight=self.day_distribution(self.day_weight_index).view(24,24)
@@ -153,23 +107,20 @@ class REPLAY(nn.Module):
         new_week_weight1=week_weight.index_select(0,t_slot.view(-1)).view(seq_len,user_len,168,1)
         new_week_weight2=week_weight.index_select(0,y_t_slot.view(-1)).view(seq_len,user_len,168,1)
 
-        # new_day_weight1=day_weight.index_select(0,t_day1.view(-1)).view(seq_len,user_len,24,1)
-        # new_day_weight2=day_weight.index_select(0,t_day2.view(-1)).view(seq_len,user_len,24,1)
 
         w_t1=self.week_matrix.index_select(0,t_slot.view(-1)).view(seq_len,user_len,-1)
-        # d_t1=self.day_matrix.index_select(0,t_day1.view(-1)).view(seq_len,user_len,-1)
         w_t1=self.week_encoder(w_t1).permute(0,1,3,2)#seq*batch_size*5*168
-        # d_t1=self.day_encoder(d_t1).permute(0,1,3,2)#seq*batch_size*5*24
+
         w_t1=torch.matmul(w_t1,new_week_weight1).squeeze()
-        # d_t1=torch.matmul(d_t1,new_day_weight1).squeeze()
+
         t_emb1 = w_t1
-        # # print(t_emb1.type())
+
         w_t2=self.week_matrix.index_select(0,y_t_slot.view(-1)).view(seq_len,user_len,-1)
-        # d_t2=self.day_matrix.index_select(0,t_day2.view(-1)).view(seq_len,user_len,-1)
+
         w_t2=self.week_encoder(w_t2).permute(0,1,3,2)#seq*batch_size*5*168
-        # d_t2=self.day_encoder(d_t2).permute(0,1,3,2)#seq*batch_size*5*24
+
         w_t2=torch.matmul(w_t2,new_week_weight2).squeeze()
-        # d_t2=torch.matmul(d_t2,new_day_weight2).squeeze()
+
         t_emb2 = w_t2
 
 
@@ -190,7 +141,7 @@ class REPLAY(nn.Module):
                 w_j = a_j*b_j + 1e-10 # small epsilon to avoid 0 division
                 sum_w += w_j
                 out_w[i] += w_j*out[j]
-            # normliaze according to weights
+            # normalize according to weights
             out_w[i] /= sum_w
         
         # add user embedding:
@@ -226,7 +177,7 @@ class H0Strategy():
 
 
 class FixNoiseStrategy(H0Strategy):
-    ''' use fixed normal noise as initialization '''
+    ''' use fixed normal noise as initialization. '''
     
     def __init__(self, hidden_size):
         super().__init__(hidden_size)
