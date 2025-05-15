@@ -74,23 +74,20 @@ class REPLAY(nn.Module):
         self.f_t = f_t # function for computing temporal weight
         self.f_s = f_s # function for computing spatial weight
         self.week_matrix=week #168 *168 
-        # self.day_matrix=day # 24*24 
+
         self.week_weight_index=week_weight_index
-        # self.day_weight_index=day_weight_index
+
 
         
         self.encoder = nn.Embedding(input_size, hidden_size) # location embedding
         self.user_encoder = nn.Embedding(user_count, hidden_size) # user embedding
         self.week_encoder=nn.Embedding(24*7,hidden_size//2)
-        # self.week_encoder=nn.Embedding(24*7,hidden_size)
-        # self.day_encoder=nn.Embedding(24,hidden_size//2)
+
         self.rnn = rnn_factory.create(hidden_size)
-        # self.fc = nn.Linear(3*hidden_size, input_size) # create outputs in lenght of locations
-        # self.fcpt= nn.Linear(2*hidden_size, hidden_size)
         self.fc = nn.Linear(3*hidden_size-hidden_size//2, input_size) # create outputs in lenght of locations
         self.fcpt= nn.Linear(2*hidden_size-hidden_size//2, hidden_size)
         self.week_distribution=User_Week_Distribution(168)
-        # self.day_distribution=User_Day_Distribution(24)
+
 
     def forward(self, x, t, t_slot, s, y_t, y_t_slot, y_s, h, active_user):        
         seq_len, user_len = x.size()
